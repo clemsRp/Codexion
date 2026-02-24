@@ -7,7 +7,9 @@ OBJ_DIR = .obj
 FILE =	codexion.c \
 		init.c \
 		moves.c \
-		validation.c
+		validation.c \
+		routine.c \
+		free.c
 
 SRC = $(addprefix $(SRC_DIR)/, $(FILE))
 OBJ = $(addprefix $(OBJ_DIR)/, $(FILE:.c=.o))
