@@ -6,7 +6,7 @@
 /*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/21 13:41:57 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/24 04:28:30 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/24 07:47:34 by crappo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,10 @@ static void	free_dongles(t_params *params)
 	i = 0;
 	while (i < params->number_of_coders)
 	{
-		pthread_mutex_destroy(&params->dongles[i].mutex);
-		pthread_cond_destroy(&params->dongles[i].cond);
+		if (params->dongles[i].mutex_res == 0)
+			pthread_mutex_destroy(&params->dongles[i].mutex);
+		if (params->dongles[i].cond_res == 0)
+			pthread_cond_destroy(&params->dongles[i].cond);
 		i++;
 	}
 	free(params->dongles);
@@ -35,8 +37,12 @@ static void	free_coders(t_params *params)
 	if (!params->coders)
 		return ;
 	i = 0;
-	while (i < params->number_of_coders)
-		pthread_mutex_destroy(&params->coders[i++].mutex);
+	while (i < get_state(params))
+	{
+		if (params->coders[i].mutex_res == 0)
+			pthread_mutex_destroy(&params->coders[i].mutex);
+		i++;
+	}
 	free(params->coders);
 }
 

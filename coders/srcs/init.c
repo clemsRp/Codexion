@@ -6,7 +6,7 @@
 /*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:47:20 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/24 06:17:39 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/25 15:28:38 by crappo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,18 +35,24 @@ void	init_params(t_params *params, char *argv[])
 static int	init_dongles(t_params *params)
 {
 	int	i;
+	int	mutex_res;
+	int	cond_res;
 
 	i = 0;
-	while (i > params->number_of_coders)
+	while (i < params->number_of_coders)
 	{
 		params->dongles[i].end_of_cooldown = 0;
 		params->dongles[i].id = i;
 		params->dongles[i].is_taken = 0;
 		params->dongles[i].queue[0] = -1;
 		params->dongles[i].queue[1] = -1;
-		if (pthread_mutex_init(&params->dongles[i].mutex, NULL) != 0)
+		mutex_res = pthread_mutex_init(&params->dongles[i].mutex, NULL);
+		params->dongles[i].mutex_res = mutex_res;
+		if (params->dongles[i].mutex_res != 0)
 			return (0);
-		if (pthread_cond_init(&params->dongles[i].cond, NULL) != 0)
+		cond_res = pthread_cond_init(&params->dongles[i].cond, NULL);
+		params->dongles[i].cond_res = cond_res;
+		if (params->dongles[i].cond_res != 0)
 			return (0);
 		i++;
 	}
@@ -69,18 +75,15 @@ static int	init_coders(t_params *params)
 	i = 0;
 	while (i < params->number_of_coders)
 	{
+		if (get_state(params) < 0)
+			break ;
 		ind = (i + 1) % params->number_of_coders;
-		params->coders[i].last_compile = 0;
-		params->coders[i].deadline = params->time_to_burnout;
-		params->coders[i].id = i;
-		params->coders[i].nb_compile = 0;
-		params->coders[i].params = params;
-		params->coders[i].left = &params->dongles[i];
-		params->coders[i].right = &params->dongles[ind];
-		if (pthread_mutex_init(&params->coders[i].mutex, NULL) != 0)
+		fill_coder(params, i, ind);
+		if (params->coders[i].mutex_res != 0)
 			return (0);
-		if (pthread_create(&params->coders[i].thread,
-				NULL, &routine, (void *)&params->coders[i]) != 0)
+		params->coders[i].thread_res = pthread_create(&params->coders[i].thread,
+				NULL, &routine, (void *)&params->coders[i]);
+		if (params->coders[i].thread_res != 0)
 			return (set_error(params));
 		pthread_mutex_lock(&params->state_mutex);
 		params->state++;
@@ -104,5 +107,8 @@ int	init_datas(t_params *params)
 		return (0);
 	if (init_coders(params) == 0)
 		return (0);
+	if (pthread_create(&params->monitor_thread,
+        NULL, &monitoring_routine, (void *)params) != 0)
+    	return (0);
 	return (1);
 }

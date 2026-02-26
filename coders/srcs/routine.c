@@ -6,28 +6,13 @@
 /*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 16:21:04 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/24 06:18:37 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/25 17:23:40 by crappo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-static int	get_state(t_params *params)
-{
-	int	res;
-
-	pthread_mutex_lock(&params->state_mutex);
-	if (params->state < params->number_of_coders && params->state != -1)
-		res = 0;
-	else if (params->state == params->number_of_coders)
-		res = 1;
-	else
-		res = -1;
-	pthread_mutex_unlock(&params->state_mutex);
-	return (res);
-}
-
-static int	wait_all_threads(t_params *params)
+int	wait_all_threads(t_params *params)
 {
 	int	res;
 
@@ -37,8 +22,8 @@ static int	wait_all_threads(t_params *params)
 		res = get_state(params);
 		usleep(1000);
 	}
-	if (res == -1)
-		return (0);
+	if (res < 0)
+		return (-1);
 	return (1);
 }
 
@@ -47,12 +32,60 @@ void	*routine(void *arg)
 	t_coder	*coder;
 
 	coder = (t_coder *)arg;
-	if (wait_all_threads(coder->params) == 0)
+	if (get_state(coder->params) < 0)
 		return (NULL);
-	pthread_mutex_lock(&coder->params->print_mutex);
-	printf("id: %d\n", coder->id);
-	pthread_mutex_unlock(&coder->params->print_mutex);
+	while (get_is_running(coder->params))
+	{
+		compile(coder);
+		if (!get_is_running(coder->params))
+			return (NULL);
+		print_message(coder->params, "is debugging", coder->id);
+		usleep(1000 * coder->params->time_to_debug);
+		if (!get_is_running(coder->params))
+			return (NULL);
+		print_message(coder->params, "is refactoring", coder->id);
+		usleep(1000 * coder->params->time_to_refactor);
+	}
 	return (NULL);
+}
+
+static void	update_is_running(t_params *params)
+{
+	int	i;
+	int	j;
+	int	nb_complete_compile;
+
+	i = 0;
+	nb_complete_compile = 0;
+	pthread_mutex_lock(&params->state_mutex);
+	while (i < params->number_of_coders)
+	{
+		pthread_mutex_lock(&params->coders[i].mutex);
+		if (params->coders[i].nb_compile
+			>= params->number_of_compiles_required)
+			nb_complete_compile++;
+		if (timestamp_ms(params->start)
+			>= params->coders[i].deadline)
+			{
+				print_message(params, "burned out", i);
+				j = 0;
+				params->is_running = 0;
+				while (j < params->number_of_coders)
+				{
+					pthread_mutex_lock(&params->dongles[j].mutex);
+					pthread_cond_broadcast(&params->dongles[j++].cond);
+					pthread_mutex_unlock(&params->dongles[j - 1].mutex);
+				}
+				pthread_mutex_unlock(&params->coders[i].mutex);
+				pthread_mutex_unlock(&params->state_mutex);
+				return ;
+			}
+		pthread_mutex_unlock(&params->coders[i].mutex);
+		i++;
+	}
+	if (nb_complete_compile == params->number_of_coders)
+		params->is_running = 0;
+	pthread_mutex_unlock(&params->state_mutex);
 }
 
 void	*monitoring_routine(void *arg)
@@ -60,7 +93,12 @@ void	*monitoring_routine(void *arg)
 	t_params	*params;
 
 	params = (t_params *)arg;
-	if (wait_all_threads(params) == 0)
+	if (get_state(params) < 0)
 		return (NULL);
+	while (get_is_running(params))
+	{
+		update_is_running(params);
+		usleep(1000);
+	}
 	return (NULL);
 }
