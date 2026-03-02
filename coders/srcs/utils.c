@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/24 10:51:38 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/25 10:33:29 by crappo           ###   ########.fr       */
+/*   Updated: 2026/03/02 10:04:44 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	fill_coder(t_params *params, int i, int ind)
 
 	params->coders[i].last_compile = 0;
 	params->coders[i].deadline = params->time_to_burnout;
-	params->coders[i].id = i;
+	params->coders[i].id = i + 1;
 	params->coders[i].nb_compile = 0;
 	params->coders[i].params = params;
 	params->coders[i].left = &params->dongles[i];
@@ -38,6 +38,7 @@ long	timestamp_ms(long start)
 void	print_message(t_params *params, char *message, int coder_id)
 {
 	pthread_mutex_lock(&params->print_mutex);
-	printf("%ld %d %s\n", timestamp_ms(params->start), coder_id, message);
+	if (get_is_running(params) || strcmp(message, "burned out") == 0)
+		printf("%ld %d %s\n", timestamp_ms(params->start), coder_id, message);
 	pthread_mutex_unlock(&params->print_mutex);
 }

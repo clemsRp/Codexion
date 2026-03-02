@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codexion.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:30:38 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/25 14:35:23 by crappo           ###   ########.fr       */
+/*   Updated: 2026/03/02 10:05:55 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@ static int	basic_values(t_params params)
 		return (0);
 	if (params.number_of_coders == 1)
 	{
-		printf("0 0 has taken a dongle");
-		usleep(params.time_to_burnout);
+		printf("0 0 has taken a dongle\n");
+		usleep(params.time_to_burnout * 1000);
 		printf("%ld 0 burned out\n", timestamp_ms(params.start));
 		return (0);
 	}
@@ -38,6 +38,7 @@ static void	algo(t_params *params)
 			pthread_join(params->coders[i].thread, NULL);
 		i++;
 	}
+	pthread_join(params->monitor_thread, NULL);
 }
 
 int	main(int argc, char *argv[])

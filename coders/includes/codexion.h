@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codexion.h                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:42:30 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/25 15:31:40 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/28 11:18:50 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,10 @@ int		get_is_running(t_params *params);
 // Free
 int		free_all(t_params *params);
 
-// Enfile
-void	enfile(t_coder *coder, int is_left);
+// Add
+void	add(t_coder *coder, int is_left);
+
+// Release
+void	release_dongles(t_coder *coder);
 
 #endif

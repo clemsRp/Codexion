@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   routine.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 16:21:04 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/25 17:23:40 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/28 16:15:41 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,75 +29,80 @@ int	wait_all_threads(t_params *params)
 
 void	*routine(void *arg)
 {
-	t_coder	*coder;
+	t_coder	*coder = (t_coder *)arg;
 
-	coder = (t_coder *)arg;
-	if (get_state(coder->params) < 0)
+	if (wait_all_threads(coder->params) < 0)
 		return (NULL);
+	if (coder->id % 2)
+		usleep(1000);
 	while (get_is_running(coder->params))
 	{
-		compile(coder);
-		if (!get_is_running(coder->params))
-			return (NULL);
+		if (!compile(coder) || !get_is_running(coder->params))
+			break;
 		print_message(coder->params, "is debugging", coder->id);
-		usleep(1000 * coder->params->time_to_debug);
+		usleep(coder->params->time_to_debug * 1000);
 		if (!get_is_running(coder->params))
-			return (NULL);
+			break;
 		print_message(coder->params, "is refactoring", coder->id);
-		usleep(1000 * coder->params->time_to_refactor);
+		usleep(coder->params->time_to_refactor * 1000);
 	}
 	return (NULL);
 }
 
-static void	update_is_running(t_params *params)
+static void	check_status(t_params *params)
 {
-	int	i;
-	int	j;
-	int	nb_complete_compile;
+	int i;
+	int j;
+	int finished;
 
 	i = 0;
-	nb_complete_compile = 0;
-	pthread_mutex_lock(&params->state_mutex);
+	finished = 0;
 	while (i < params->number_of_coders)
 	{
 		pthread_mutex_lock(&params->coders[i].mutex);
-		if (params->coders[i].nb_compile
-			>= params->number_of_compiles_required)
-			nb_complete_compile++;
-		if (timestamp_ms(params->start)
-			>= params->coders[i].deadline)
+		if (timestamp_ms(params->start) >= params->coders[i].deadline)
+		{
+			print_message(params, "burned out", i);
+			pthread_mutex_lock(&params->state_mutex);
+			params->is_running = 0;
+			pthread_mutex_unlock(&params->state_mutex);
+			j = 0;
+			while (j < params->number_of_coders)
 			{
-				print_message(params, "burned out", i);
-				j = 0;
-				params->is_running = 0;
-				while (j < params->number_of_coders)
-				{
-					pthread_mutex_lock(&params->dongles[j].mutex);
-					pthread_cond_broadcast(&params->dongles[j++].cond);
-					pthread_mutex_unlock(&params->dongles[j - 1].mutex);
-				}
-				pthread_mutex_unlock(&params->coders[i].mutex);
-				pthread_mutex_unlock(&params->state_mutex);
-				return ;
+				pthread_mutex_lock(&params->dongles[j].mutex);
+				pthread_cond_broadcast(&params->dongles[j].cond);
+				pthread_mutex_unlock(&params->dongles[j].mutex);
+				j++;
 			}
+			pthread_mutex_unlock(&params->coders[i].mutex);
+			return;
+		}
+		if (params->coders[i].nb_compile >= params->number_of_compiles_required)
+			finished++;
 		pthread_mutex_unlock(&params->coders[i].mutex);
 		i++;
 	}
-	if (nb_complete_compile == params->number_of_coders)
+	if (finished == params->number_of_coders)
+	{
+		pthread_mutex_lock(&params->state_mutex);
 		params->is_running = 0;
-	pthread_mutex_unlock(&params->state_mutex);
+		pthread_mutex_unlock(&params->state_mutex);
+	}
 }
 
 void	*monitoring_routine(void *arg)
 {
-	t_params	*params;
-
+	int		i;
+	t_params *params;
+	
+	i = 0;
 	params = (t_params *)arg;
-	if (get_state(params) < 0)
-		return (NULL);
+	wait_all_threads(params);
 	while (get_is_running(params))
 	{
-		update_is_running(params);
+		check_status(params);
+		while (i < params->number_of_coders)
+			pthread_cond_broadcast(&params->dongles[i++].cond);
 		usleep(1000);
 	}
 	return (NULL);

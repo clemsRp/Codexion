@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: crappo <crappo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:47:20 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/25 15:28:38 by crappo           ###   ########.fr       */
+/*   Updated: 2026/02/28 16:12:49 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ static int	init_dongles(t_params *params)
 	while (i < params->number_of_coders)
 	{
 		params->dongles[i].end_of_cooldown = 0;
-		params->dongles[i].id = i;
+		params->dongles[i].id = i + 1;
 		params->dongles[i].is_taken = 0;
 		params->dongles[i].queue[0] = -1;
 		params->dongles[i].queue[1] = -1;
