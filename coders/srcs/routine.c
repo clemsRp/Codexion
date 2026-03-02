@@ -6,7 +6,7 @@
 /*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 16:21:04 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/28 16:15:41 by clement          ###   ########.fr       */
+/*   Updated: 2026/03/02 11:51:57 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,29 @@ void	*routine(void *arg)
 	return (NULL);
 }
 
+static void	burned_out(t_params *params, int index)
+{
+	int	j;
+
+	print_message(params, "burned out", index);
+	pthread_mutex_lock(&params->state_mutex);
+	params->is_running = 0;
+	pthread_mutex_unlock(&params->state_mutex);
+	j = 0;
+	while (j < params->number_of_coders)
+	{
+		pthread_mutex_lock(&params->dongles[j].mutex);
+		pthread_cond_broadcast(&params->dongles[j].cond);
+		pthread_mutex_unlock(&params->dongles[j].mutex);
+		j++;
+	}
+	pthread_mutex_unlock(&params->coders[index].mutex);
+	return;
+}
+
 static void	check_status(t_params *params)
 {
 	int i;
-	int j;
 	int finished;
 
 	i = 0;
@@ -61,22 +80,7 @@ static void	check_status(t_params *params)
 	{
 		pthread_mutex_lock(&params->coders[i].mutex);
 		if (timestamp_ms(params->start) >= params->coders[i].deadline)
-		{
-			print_message(params, "burned out", i);
-			pthread_mutex_lock(&params->state_mutex);
-			params->is_running = 0;
-			pthread_mutex_unlock(&params->state_mutex);
-			j = 0;
-			while (j < params->number_of_coders)
-			{
-				pthread_mutex_lock(&params->dongles[j].mutex);
-				pthread_cond_broadcast(&params->dongles[j].cond);
-				pthread_mutex_unlock(&params->dongles[j].mutex);
-				j++;
-			}
-			pthread_mutex_unlock(&params->coders[i].mutex);
-			return;
-		}
+			return (burned_out(params, i));
 		if (params->coders[i].nb_compile >= params->number_of_compiles_required)
 			finished++;
 		pthread_mutex_unlock(&params->coders[i].mutex);

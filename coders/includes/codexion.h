@@ -6,7 +6,7 @@
 /*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:42:30 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/28 11:18:50 by clement          ###   ########.fr       */
+/*   Updated: 2026/03/02 11:37:20 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,16 +78,17 @@ typedef struct s_params
 	int				state_res;
 }				t_params;
 
+// Validation
+int		is_valid_input(int argc, char *argv[]);
+
 // Init
 void	init_params(t_params *params, char *argv[]);
-int		is_valid_input(int argc, char *argv[]);
 int		init_datas(t_params *params);
 
 // Moves
-long	timestamp_ms(long start);
 int		compile(t_coder *coder);
-void	print_message(t_params *params, char *message, int coder_id);
 void	release_dongle(t_coder *coder, int is_left);
+void	release_dongles(t_coder *coder);
 
 // Routines
 void	*routine(void *arg);
@@ -96,6 +97,8 @@ int		wait_all_threads(t_params *params);
 
 // Utils
 void	fill_coder(t_params *params, int i, int ind);
+long	timestamp_ms(long start);
+void	print_message(t_params *params, char *message, int coder_id);
 
 // Get
 int		get_state(t_params *params);
@@ -106,8 +109,5 @@ int		free_all(t_params *params);
 
 // Add
 void	add(t_coder *coder, int is_left);
-
-// Release
-void	release_dongles(t_coder *coder);
 
 #endif

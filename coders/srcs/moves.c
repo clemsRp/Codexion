@@ -6,7 +6,7 @@
 /*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/22 09:20:37 by crappo            #+#    #+#             */
-/*   Updated: 2026/02/28 16:12:46 by clement          ###   ########.fr       */
+/*   Updated: 2026/03/02 11:36:45 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,12 @@ void	release_dongle(t_coder *coder, int is_left)
 	d->queue[1] = -1;
 	pthread_cond_broadcast(&d->cond);
 	pthread_mutex_unlock(&d->mutex);
+}
+
+void	release_dongles(t_coder *coder)
+{
+	release_dongle(coder, 0);
+	release_dongle(coder, 1);
 }
 
 int	compile(t_coder *coder)

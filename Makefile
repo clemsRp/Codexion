@@ -12,8 +12,7 @@ FILE =	codexion.c \
 		free.c \
 		get.c \
 		utils.c \
-		add.c \
-		release.c
+		add.c
 
 SRC = $(addprefix $(SRC_DIR)/, $(FILE))
 OBJ = $(addprefix $(OBJ_DIR)/, $(FILE:.c=.o))
