@@ -49,7 +49,7 @@ No burnout:
 
 Immediate burnout:
 ```
-./codexion 1 800 200 200 200 0 0 fifo
+./codexion 1 800 200 200 200 1 0 fifo
 ```
 
 EDF scheduling test:

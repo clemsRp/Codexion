@@ -28,7 +28,7 @@ static void	add_edf(t_coder *coders, t_dongle *dongle, int coder_id)
 		dongle->queue[0] = coder_id;
 	else if (dongle->queue[1] == -1)
 	{
-		cur_id = dongle->queue[0];
+		cur_id = dongle->queue[0] - 1;
 		if (coders[cur_id].deadline < coders[coder_id].deadline)
 			dongle->queue[1] = coder_id;
 		else
@@ -55,6 +55,6 @@ void	add(t_coder *coder, int is_left)
 	if (coder->params->scheduler == FIFO)
 		add_fifo(d, coder->id);
 	else
-		add_edf(coder->params->coders, d, coder->id);
+		add_edf(coder->params->coders, d, coder->id - 1);
 	pthread_mutex_unlock(&d->mutex);
 }

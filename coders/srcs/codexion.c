@@ -6,7 +6,7 @@
 /*   By: clement <clement@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 17:30:38 by crappo            #+#    #+#             */
-/*   Updated: 2026/03/02 10:05:55 by clement          ###   ########.fr       */
+/*   Updated: 2026/03/03 10:40:20 by clement          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 static int	basic_values(t_params params)
 {
-	if (params.number_of_coders == 0)
+	if (!params.number_of_coders || !params.number_of_compiles_required)
 		return (0);
 	if (params.number_of_coders == 1)
 	{
